@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const { execSync } = require('child_process');
 
+
 const fakeRequest = require('supertest');
 const app = require('../lib/app');
 const client = require('../lib/client');
@@ -22,7 +23,7 @@ describe('app routes', () => {
           password: '1234'
         });
       
-      token = signInData.body.token; // eslint-disable-line
+      token = signInData.body.token;
   
       return done();
     });
@@ -31,31 +32,63 @@ describe('app routes', () => {
       return client.end(done);
     });
 
-    test('returns animals', async() => {
+    test('returns user\'s tasks', async() => {
 
       const expectation = [
         {
-          'id': 1,
-          'name': 'bessie',
-          'coolfactor': 3,
-          'owner_id': 1
-        },
-        {
-          'id': 2,
-          'name': 'jumpy',
-          'coolfactor': 4,
-          'owner_id': 1
-        },
-        {
-          'id': 3,
-          'name': 'spot',
-          'coolfactor': 10,
-          'owner_id': 1
+          'id': 4,
+          'todo': 'water plants',
+          'completed': false,
+          'owner_id': 2
         }
       ];
-
+      
       const data = await fakeRequest(app)
-        .get('/animals')
+        .post('/api/todos')
+        .send(expectation[0])
+        .set('Authorization', token)
+        .expect('Content-Type', /json/)
+        .expect(200);
+
+      expect(data.body).toEqual(expectation);
+    });
+
+    test('gets user\'s tasks', async() => {
+
+      const expectation = [
+        {
+          'id': 4,
+          'todo': 'water plants',
+          'completed': false,
+          'owner_id': 2
+        }
+      ];
+      
+      const data = await fakeRequest(app)
+        .get('/api/todos')
+        .send(expectation[0])
+        .set('Authorization', token)
+        .expect('Content-Type', /json/)
+        .expect(200);
+
+      expect(data.body).toEqual(expectation);
+    });
+
+    test('updates user\'s tasks', async() => {
+
+      const expectation = [
+        {
+          'id': 4,
+          'todo': 'water plants',
+          'completed': true,
+          'owner_id': 2
+        }
+      ];
+      
+      const data = await fakeRequest(app)
+        .put('/api/todos/4')
+        .send(expectation[0])
+        .set('Authorization', token)
         .expect('Content-Type', /json/)
         .expect(200);
 
